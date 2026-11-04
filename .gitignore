@@ -1,0 +1,28 @@
+# Dependências e caches
+node_modules/
+.next/
+out/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Ambientes e segredos
+.env
+.env*.local
+.env.*
+!.env.example
+
+# Logs e temporários
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+*.swp
+*~
+Thumbs.db
+
+# Chaves e certificados
+*.pem
+*.key
