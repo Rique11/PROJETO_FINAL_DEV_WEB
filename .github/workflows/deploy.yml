@@ -39,7 +39,9 @@ jobs:
         working-directory: ./frontend
         env:
           NEXT_PUBLIC_BASE_PATH: "/PROJETO_FINAL_DEV_WEB"
-        run: npm run build
+        run: |
+          npm run build
+          touch out/.nojekyll
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
