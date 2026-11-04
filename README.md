@@ -5,6 +5,7 @@ Sistema web para organização pedagógica, controle de equipamentos e acompanha
 Projeto desenvolvido para a disciplina de **Desenvolvimento de Aplicações Web** (Engenharia de Computação — UTFPR) integrado ao projeto de extensão *"Desenvolvimento de Aplicações Web baseadas em Inteligência Artificial para Apoio de Professores da Educação Básica"*.
 
 - **Integrante:** Pedro Lucas dos Reis Silva — RA 2272040
+- **Integrante:** Henrique Cois Farjado Gau  — RA 2369133
 - **Tema:** 12 — *Segurança, controle e uso pedagógico dos dispositivos fornecidos pelo governo*
 - **Repositório Git Público:** [https://github.com/plreis/PROJETO_FINAL_DEV_WEB](https://github.com/plreis/PROJETO_FINAL_DEV_WEB)
 - **Demonstração Online (Sprint 1):** [https://plreis.github.io/PROJETO_FINAL_DEV_WEB/](https://plreis.github.io/PROJETO_FINAL_DEV_WEB/)
