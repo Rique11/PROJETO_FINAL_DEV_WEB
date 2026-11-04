@@ -9,7 +9,7 @@ Projeto desenvolvido para a disciplina de **Desenvolvimento de Aplicações Web*
 - **Repositório Git Público:** [https://github.com/plreis/PROJETO_FINAL_DEV_WEB](https://github.com/plreis/PROJETO_FINAL_DEV_WEB)
 - **Demonstração Online (Sprint 1):** [https://plreis.github.io/PROJETO_FINAL_DEV_WEB/](https://plreis.github.io/PROJETO_FINAL_DEV_WEB/)
 
-> **Nota sobre a composição da equipe:** Conforme registrado no planejamento acadêmico, o projeto está sendo executado individualmente por Pedro Lucas dos Reis Silva (RA 2272040), em virtude de alinhamento com a coordenação da disciplina para validação docente de exceção de dupla.
+> **Nota sobre a composição da equipe:** Por hora trabalho individual.
 
 ---
 
