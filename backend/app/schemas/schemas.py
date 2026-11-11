@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
-
+from pydantic import BaseModel, Field
 
 class ClassroomBase(BaseModel):
     id: str
@@ -51,3 +51,26 @@ class AIAnalysisResponse(BaseModel):
     limitations: str
     evidence_incident_ids: List[str]
     is_mock: bool = True
+
+
+## Telemetria
+
+class TelemetryEventType(str, Enum):
+    FOCO_PERDIDO = "foco_perdido"
+    FOCO_RECUPERADO = "foco_recuperado"
+    ALERTA = "alerta"
+
+class TelemetryEventCreate(BaseModel):
+    session_id: str = Field(min_length=1)
+    device_id: str = Field(min_length=1)
+    event_type: TelemetryEventType
+    occurred_at: datetime
+    duration_seconds: Optional[int] = Field(
+        default=None,
+        ge=0,
+        le=86400,
+    )
+
+class TelemetryEventResponse(TelemetryEventCreate):
+    id: str
+    received_at: datetime
