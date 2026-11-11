@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
@@ -156,7 +158,8 @@ class IncidentResponse(BaseModel):
 
 ### IA 
 class AIPedagogicalAdviceRequest(BaseModel):
-    session_id: str
+    objective: str = Field(min_length=10, max_length=500)
+    focus: LiveFocusSummary = Field(default_factory=lambda: LiveFocusSummary())
 
 
 class AIPedagogicalAdviceResponse(BaseModel):
@@ -169,6 +172,15 @@ class AIPedagogicalAdviceResponse(BaseModel):
     limitations: str
     evidence_incident_ids: list[str]
     is_mock: bool = False
+
+
+class AIPedagogicalAdvice(BaseModel):
+    session_summary: str
+    engagement_diagnostic: str
+    detected_patterns: list[str]
+    pedagogical_interventions: list[str]
+    recommendations_for_management: list[str]
+    ethical_disclaimer: str
 
 
 class LiveFocusSummary(BaseModel):

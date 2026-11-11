@@ -1,13 +1,13 @@
 import json
 from datetime import datetime, timezone
-from typing import Any
-
 import httpx
 
 from app.core.config import settings
 from app.schemas.schemas import (
     AILiveGuidanceRequest,
     AILiveGuidanceResponse,
+    AIPedagogicalAdvice,
+    AIPedagogicalAdviceRequest,
     ProtecaIntervention,
     ProtecaState,
 )
@@ -127,3 +127,30 @@ def generate_live_guidance(request: AILiveGuidanceRequest) -> AILiveGuidanceResp
         return _fallback(request).model_copy(
             update={"model": "local-fallback", "is_mock": True}
         )
+
+
+def generate_pedagogical_advice(
+    session_id: str,
+    request: AIPedagogicalAdviceRequest,
+) -> AIPedagogicalAdvice:
+    guidance = generate_live_guidance(
+        AILiveGuidanceRequest(
+            session_id=session_id,
+            objective=request.objective,
+            focus=request.focus,
+        )
+    )
+    interventions = list(guidance.teacher_suggestions)
+    if guidance.intervention:
+        interventions.append(guidance.intervention.message)
+
+    return AIPedagogicalAdvice(
+        session_summary=guidance.observed_pattern,
+        engagement_diagnostic=guidance.attention_level,
+        detected_patterns=[guidance.observed_pattern],
+        pedagogical_interventions=interventions[:2],
+        recommendations_for_management=[
+            "Validar a sugestão com observação docente antes de qualquer encaminhamento."
+        ],
+        ethical_disclaimer=guidance.limitations,
+    )
