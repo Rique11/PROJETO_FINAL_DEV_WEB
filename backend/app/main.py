@@ -2,7 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import health
+from app.routers import (
+    devices,
+    health,
+    incidents,
+    sessions,
+    telemetry,
+)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -22,7 +28,31 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 # Roteador de saúde
-app.include_router(health.router, prefix=settings.API_V1_STR, tags=["Saúde"])
+app.include_router(
+    health.router,
+    prefix=settings.API_V1_STR,
+    tags=["Saúde"],
+)
+
+app.include_router(
+    devices.router,
+    prefix=settings.API_V1_STR,
+)
+
+app.include_router(
+    sessions.router,
+    prefix=settings.API_V1_STR,
+)
+
+app.include_router(
+    incidents.router,
+    prefix=settings.API_V1_STR,
+)
+
+app.include_router(
+    telemetry.router,
+    prefix=settings.API_V1_STR,
+)
 
 
 @app.get("/")
