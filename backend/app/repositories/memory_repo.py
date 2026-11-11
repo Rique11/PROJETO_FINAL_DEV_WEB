@@ -11,7 +11,47 @@ from app.schemas.schemas import (
 class MemoryRepository:
     def __init__(self):
         self._telemetry_events: dict[str, TelemetryEventResponse] = {}
+        self._devices = {}
+        self._sessions = {}
+        self._incidents = {}
 
+    # ---------- Dispositivos ----------
+    def list_devices(self):
+        pass
+
+    def get_device(self, device_id: str):
+        pass
+
+    # ---------- Sessões ----------
+    def list_sessions(self):
+        pass
+
+    def get_session(self, session_id: str):
+        pass
+
+    def create_session(self, data):
+        pass
+
+    def close_session(self, session_id: str, justification: str):
+        pass
+    # ---------- Ocorrências ----------
+    def list_incidents(self, session_id=None, category=None, incident_status=None):
+        pass
+
+    def get_incident(self, incident_id: str):
+        pass
+
+    def create_incident(self, data):
+        pass
+
+    def update_incident_status(
+        self,
+        incident_id: str,
+        new_status,
+        justification=None,
+    ):
+        pass
+    # ---------- Telemetria ----------
     def create_telemetry_event(
         self,
         data: TelemetryEventCreate,

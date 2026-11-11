@@ -1,9 +1,8 @@
-from typing import Annotated, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 
-from app.core.dependencies import get_memory_repository
-from app.repositories.memory_repo import MemoryRepository
+from app.core.dependencies import MemoryRepositoryDependency
 from app.schemas.schemas import (
     TelemetryEventCreate,
     TelemetryEventResponse,
@@ -15,11 +14,6 @@ router = APIRouter(
     tags=["Telemetria"],
 )
 
-RepositoryDependency = Annotated[
-    MemoryRepository,
-    Depends(get_memory_repository),
-]
-
 
 @router.post(
     "",
@@ -28,7 +22,7 @@ RepositoryDependency = Annotated[
 )
 def create_telemetry_event(
     data: TelemetryEventCreate,
-    repository: RepositoryDependency,
+    repository: MemoryRepositoryDependency,
 ):
     return repository.create_telemetry_event(data)
 
@@ -38,7 +32,7 @@ def create_telemetry_event(
     response_model=list[TelemetryEventResponse],
 )
 def list_telemetry_events(
-    repository: RepositoryDependency,
+    repository: MemoryRepositoryDependency,
     session_id: Optional[str] = None,
     device_id: Optional[str] = None,
 ):
