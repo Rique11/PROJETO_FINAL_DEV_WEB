@@ -1,4 +1,4 @@
-# Vigia Escolar
+# Proteca
 
 Sistema web para organização pedagógica, controle de equipamentos e acompanhamento formativo no uso de dispositivos educacionais fornecidos pelo governo.
 
@@ -17,12 +17,12 @@ Projeto desenvolvido para a disciplina de **Desenvolvimento de Aplicações Web*
 
 ## 1. Descrição do Sistema
 
-Vigia Escolar organiza o uso pedagógico de Chromebooks e tablets em escolas de educação básica.  
+Proteca organiza o uso pedagógico de Chromebooks e tablets em escolas de educação básica.
 O professor abre uma sessão de aula e acompanha os dispositivos disponibilizados à turma.  
 Durante a sessão, registra ocorrências de uso inadequado, acesso indevido ou risco à privacidade.  
 O gestor consulta ocorrências e intervenções, com filtros e indicadores derivados dos registros.  
 Cada ocorrência percorre um fluxo de análise, orientação e encerramento com decisão humana.  
-A IA Gemini resume os registros selecionados e sugere intervenções educativas para revisão docente.  
+A Proteca Live usa sinais agregados da sessão para sugerir intervenções educativas e perguntas alinhadas ao objetivo da aula. A IA Gemini é chamada exclusivamente pelo backend quando configurada.
 A solução controla o acesso ao próprio sistema e minimiza a coleta de informações dos estudantes.  
 O sistema não monitora navegação, câmera ou sistema operacional dos dispositivos; o acompanhamento depende de registro humano e telemetria leve consentida.
 
@@ -89,7 +89,8 @@ Em atendimento à regra do edital (*"Todo membro deve participar de todas as ati
 
 - **Frontend:** [Next.js](https://nextjs.org/) 15 (App Router com exportação estática `output: 'export'` na Sprint 1 e integração SSR/Vercel a partir da Sprint 3), [TypeScript](https://www.typescriptlang.org/) e [Tailwind CSS](https://tailwindcss.com/).
 - **Backend:** Python 3.11+ com [FastAPI](https://fastapi.tiangolo.com/), [Pydantic v2](https://docs.pydantic.dev/) e Uvicorn.
-- **Inteligência Artificial (Sprint 2):** Google Gemini API chamada exclusivamente a partir do backend, fornecendo diagnóstico de engajamento e orientações pedagógicas formativas.
+- **Inteligência Artificial (Sprint 2):** Proteca Live chama a Google Gemini API exclusivamente a partir do backend, com entrada agregada e sugestões pedagógicas formativas.
+- **Contexto educacional:** endpoints opcionais consultam Wikipedia e Open Library para enriquecer objetivos de aula; essas fontes não monitoram alunos.
 - **Telemetria e Detecção de Foco (Sprint 3):** Web Standards com Page Visibility API (`visibilitychange`), sem necessidade de instalação de agentes nativos no sistema operacional dos Chromebooks escolares.
 - **Autenticação e Autorização (Sprint 3):** JWT com algoritmo HS256, senhas com Argon2 e controle baseado em perfis (Professor, Gestor, Administrador).
 - **Banco de Dados (Sprint 4):** PostgreSQL hospedado (Supabase/Neon) via [SQLModel](https://sqlmodel.tiangolo.com/).
@@ -140,6 +141,14 @@ uvicorn app.main:app --reload --port 8000
 Endpoints disponíveis no backend:
 - Swagger UI interativo: [http://localhost:8000/docs](http://localhost:8000/docs)
 - Verificação de saúde: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
+- Live pedagógico: `POST /api/v1/ia/live`
+- Contexto de aprendizagem: `GET /api/v1/learning/context?query=...`
+
+### Variáveis de ambiente
+
+No backend, copie `.env.example` para `.env` e configure `GEMINI_API_KEY` apenas no servidor ou nos secrets do Coolify. Nunca use essa chave como `NEXT_PUBLIC_*` nem faça commit do `.env`.
+
+No frontend, `NEXT_PUBLIC_API_URL` aponta para a URL pública do FastAPI. Sem essa variável, a interface usa um fallback local identificado como tal.
 
 ---
 
@@ -148,6 +157,7 @@ Endpoints disponíveis no backend:
 1. **Ausência de monitoramento invasivo:** O sistema não instala agentes em dispositivos dos alunos, não acessa câmeras, microfones nem rastreia histórico de navegação individual.
 2. **Registro factual estrito:** As ocorrências registram apenas fatos observados presencialmente pelo docente, sem anotação de nomes ou dados sensíveis de menores.
 3. **Decisão e mediação humana:** As sínteses geradas pelo modelo Gemini constituem exclusivamente sugestões pedagógicas formativas para análise do professor, não gerando punições automáticas.
+4. **Proteca Live:** O professor escolhe quando executar a leitura ou ativa o intervalo de dois minutos. A aplicação não captura áudio, vídeo, tela, notas individuais ou histórico de navegação.
 
 ---
 

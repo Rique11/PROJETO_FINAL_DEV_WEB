@@ -9,9 +9,11 @@ import {
   Device,
   Incident,
   IncidentStatus,
+  LiveGuidance,
   LessonSession,
 } from '@/types';
 import { mockService } from '@/services/mockService';
+import { requestLiveGuidance as requestLiveGuidanceFromApi } from '@/services/liveGuidanceService';
 
 interface Notification {
   id: string;
@@ -32,6 +34,7 @@ interface SchoolContextValue {
   createIncident: (dto: CreateIncidentDTO) => Promise<Incident>;
   updateIncidentStatus: (id: string, status: IncidentStatus, justification?: string) => Promise<Incident>;
   requestAIAnalysis: (sessionId: string) => Promise<AIAnalysis>;
+  requestLiveGuidance: (sessionId: string) => Promise<LiveGuidance>;
   reloadState: () => Promise<void>;
 }
 
@@ -114,6 +117,61 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
     return await mockService.requestAIAnalysis(sessionId);
   };
 
+  const handleRequestLiveGuidance = async (sessionId: string): Promise<LiveGuidance> => {
+    const session = sessions.find((item) => item.id === sessionId);
+    if (!session) {
+      throw new Error('Sessão não encontrada para gerar orientação.');
+    }
+
+    const focus = {
+      activeDevices: session.allocatedDeviceIds.length,
+      focusLostEvents: incidents.filter(
+        (incident) => incident.sessionId === sessionId && incident.category === 'desvio_foco'
+      ).length,
+      safetyAlerts: incidents.filter(
+        (incident) =>
+          incident.sessionId === sessionId &&
+          ['privacidade_exposicao', 'acesso_indevido'].includes(incident.category)
+      ).length,
+      openIncidents: incidents.filter(
+        (incident) => incident.sessionId === sessionId && incident.status !== 'encerrada'
+      ).length,
+      elapsedMinutes: Math.max(
+        0,
+        Math.round((Date.now() - new Date(session.startedAt).getTime()) / 60000)
+      ),
+    };
+
+    try {
+      const live = await requestLiveGuidanceFromApi({
+        sessionId,
+        objective: session.objective,
+        focus,
+      });
+      if (live) return live;
+    } catch {
+      // A local fallback keeps the classroom flow usable when the API is unavailable.
+    }
+
+    const fallback = await mockService.requestAIAnalysis(sessionId);
+    return {
+      sessionId: fallback.sessionId,
+      model: 'local-fallback',
+      generatedAt: fallback.generatedAt,
+      attentionLevel: 'atenção',
+      observedPattern: fallback.summary,
+      teacherSuggestions: fallback.pedagogicalRecommendations.slice(0, 2),
+      intervention: {
+        state: 'curiosidade',
+        title: 'Proteca tem uma pergunta',
+        message: 'Uma pista pode ajudar a turma a reencontrar o objetivo da aula.',
+        prompt: 'Que parte do objetivo você consegue explicar com um exemplo?',
+      },
+      limitations: `${fallback.limitations} Esta orientação foi gerada localmente porque a API não está disponível.`,
+      isMock: true,
+    };
+  };
+
   return (
     <SchoolContext.Provider
       value={{
@@ -129,6 +187,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
         createIncident: handleCreateIncident,
         updateIncidentStatus: handleUpdateIncidentStatus,
         requestAIAnalysis: handleRequestAIAnalysis,
+        requestLiveGuidance: handleRequestLiveGuidance,
         reloadState,
       }}
     >

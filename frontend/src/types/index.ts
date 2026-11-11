@@ -84,6 +84,27 @@ export interface AIAnalysis {
   isMock: boolean;
 }
 
+export type ProtecaState = 'acolhimento' | 'curiosidade' | 'alerta';
+
+export interface ProtecaIntervention {
+  state: ProtecaState;
+  title: string;
+  message: string;
+  prompt: string;
+}
+
+export interface LiveGuidance {
+  sessionId: string;
+  model: string;
+  generatedAt: string;
+  attentionLevel: string;
+  observedPattern: string;
+  teacherSuggestions: string[];
+  intervention?: ProtecaIntervention | null;
+  limitations: string;
+  isMock: boolean;
+}
+
 export interface CreateSessionDTO {
   classroomId: string;
   objective: string;

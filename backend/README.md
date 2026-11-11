@@ -1,8 +1,8 @@
-# Vigia Escolar — Backend API
+# Proteca — Backend API
 
-Backend desenvolvido em Python com **FastAPI**, estruturado para gerenciar as regras de negócio, autenticação JWT, persistência com SQLModel e integração com a API Gemini para orientação pedagógica assistida.
+Backend desenvolvido em Python com **FastAPI**, estruturado para gerenciar regras de negócio, telemetria leve de sessão, contexto educacional público e integração opcional com a API Gemini para orientação pedagógica assistida.
 
-> **Status da Sprint 1:** Estrutura inicial (scaffold) com schemas tipados e verificação de integridade operacional (`/api/v1/health`). Os endpoints de negócio completos e a integração com o SDK Gemini serão ativados e hospedados na **Sprint 2 (11/11/2026)**.
+> **Status da Sprint 2:** Rotas de negócio, telemetria, Proteca Live com fallback local e contexto opcional via Wikipedia/Open Library estão implementados. A chave Gemini é opcional em desenvolvimento e necessária apenas para geração real no ambiente publicado.
 
 ---
 
@@ -14,9 +14,9 @@ backend/
 │   ├── auth/           # Módulo de autenticação JWT e senhas (Argon2)
 │   ├── core/           # Configurações e variáveis de ambiente (Pydantic Settings)
 │   ├── models/         # Modelos de dados relacionais (SQLModel)
-│   ├── routers/        # Rotas da API (health, auth, sessions, incidents, ai)
+│   ├── routers/        # Rotas da API (health, sessions, incidents, telemetry, ia, learning)
 │   ├── schemas/        # Contratos de entrada e saída (Pydantic v2)
-│   ├── services/       # Lógica de integração e serviço Gemini
+│   ├── services/       # Gemini/fallback e contexto educacional
 │   └── main.py         # Instância do FastAPI e middlewares (CORS)
 ├── tests/              # Testes automatizados (pytest e TestClient)
 ├── .env.example        # Exemplo inerte de configuração
@@ -61,7 +61,14 @@ Com o servidor em execução, acesse:
 
 ---
 
-## 5. Testes Automatizados
+## 5. Rotas da Sprint 2
+
+- `POST /api/v1/ia/live`: recebe objetivo e sinais agregados; retorna orientação estruturada e intervenção Proteca.
+- `GET /api/v1/learning/context?query=...`: busca até quatro referências em Wikipedia/Open Library. Falhas externas retornam lista vazia e uma limitação explícita.
+
+O Live nunca recebe notas individuais, CSV, captura de tela ou identificadores de alunos. Sem `GEMINI_API_KEY`, ele retorna `model: "local-fallback"` e `is_mock: true`.
+
+## 6. Testes Automatizados
 
 ```bash
 pytest tests/

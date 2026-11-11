@@ -1,131 +1,160 @@
 'use client';
 
-import React, { useState } from 'react';
-import { AIAnalysis } from '@/types';
+import React, { useCallback, useEffect, useState } from 'react';
+import { LiveGuidance, ProtecaState } from '@/types';
 import { useSchool } from '@/context/SchoolContext';
 
 interface AIDemoCardProps {
   sessionId: string;
 }
 
-export const AIDemoCard: React.FC<AIDemoCardProps> = ({ sessionId }) => {
-  const { requestAIAnalysis } = useSchool();
-  const [analysis, setAnalysis] = useState<AIAnalysis | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+const stateLabels: Record<ProtecaState, string> = {
+  acolhimento: 'Acolhimento',
+  curiosidade: 'Curiosidade',
+  alerta: 'Alerta de segurança',
+};
 
-  const handleGenerate = async () => {
+const stateStyles: Record<ProtecaState, string> = {
+  acolhimento: 'from-emerald-400/20 to-cyan-400/10 border-emerald-300/30',
+  curiosidade: 'from-amber-400/20 to-sky-400/10 border-amber-300/30',
+  alerta: 'from-rose-400/20 to-orange-400/10 border-rose-300/30',
+};
+
+export const AIDemoCard: React.FC<AIDemoCardProps> = ({ sessionId }) => {
+  const { requestLiveGuidance } = useSchool();
+  const [guidance, setGuidance] = useState<LiveGuidance | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAutoMode, setIsAutoMode] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleGenerate = useCallback(async () => {
     setIsLoading(true);
-    // Simula um delay realista de análise local
-    setTimeout(async () => {
-      const result = await requestAIAnalysis(sessionId);
-      setAnalysis(result);
+    setError(null);
+    try {
+      setGuidance(await requestLiveGuidance(sessionId));
+    } catch {
+      setError('Não foi possível gerar a orientação agora. Tente novamente.');
+    } finally {
       setIsLoading(false);
-    }, 600);
-  };
+    }
+  }, [requestLiveGuidance, sessionId]);
+
+  useEffect(() => {
+    if (!isAutoMode) return;
+    const intervalId = window.setInterval(() => {
+      void handleGenerate();
+    }, 120000);
+    return () => window.clearInterval(intervalId);
+  }, [isAutoMode, handleGenerate]);
+
+  const intervention = guidance?.intervention;
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 to-brand-primary text-white rounded-lg p-5 sm:p-6 shadow-md border border-slate-700">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-white/10 pb-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="p-1 rounded bg-amber-400 text-slate-900">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-              </svg>
-            </span>
-            <h3 className="text-lg font-bold">Orientação Pedagógica Assistida</h3>
+    <section className="proteca-panel rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-950 via-brand-primary to-slate-900 p-5 text-white shadow-lg sm:p-6">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-5">
+        <div className="flex items-start gap-3">
+          <div className="proteca-orb flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-300 text-xl font-black text-slate-950 shadow-lg shadow-amber-300/20" aria-hidden="true">
+            P
           </div>
-          <p className="text-xs text-slate-300">
-            Apoio assistido para síntese de intercorrências e sugestão de mediação formativa.
-          </p>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Proteca Live</p>
+            <h3 className="mt-1 text-xl font-bold">Foco, segurança e curiosidade</h3>
+            <p className="mt-1 max-w-xl text-xs leading-relaxed text-slate-300">
+              Apoio ao professor com sinais agregados e sugestões formativas. A decisão continua humana.
+            </p>
+          </div>
         </div>
-
-        {/* Rótulo de Demonstração Obrigatório */}
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-400 text-slate-950 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-slate-950 animate-ping" />
-          Demonstração — sem chamada à IA
+        <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-bold text-emerald-200">
+          Sem vigilância invasiva
         </span>
       </div>
 
-      <div className="text-xs text-slate-300 mb-4 bg-white/5 p-3 rounded border border-white/10">
-        <strong className="text-amber-300 block mb-1">Papel planejado para o Google Gemini (Sprint 2):</strong>
-        Na próxima sprint, o backend em FastAPI processará os registros autorizados desta sessão e acionará o modelo Gemini para gerar recomendações educativas contextualizadas. Todas as intervenções são sempre sugestões para julgamento soberano do professor.
+      <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-slate-300">
+          <strong className="mb-1 block text-amber-200">Modo de acompanhamento</strong>
+          {isAutoMode ? 'Proteca fará uma leitura agregada a cada 2 minutos.' : 'Faça uma leitura quando quiser mudar o ritmo da aula.'}
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsAutoMode((current) => !current)}
+          className="rounded-xl border border-white/20 px-4 py-3 text-sm font-bold transition hover:bg-white/10"
+          aria-pressed={isAutoMode}
+        >
+          {isAutoMode ? 'Pausar Live' : 'Ativar a cada 2 min'}
+        </button>
       </div>
 
-      {!analysis && !isLoading && (
-        <div className="text-center py-6 bg-white/5 rounded-lg border border-dashed border-white/20">
-          <p className="text-sm text-slate-300 mb-3">
-            Gere uma demonstração da estrutura de orientação com base nas ocorrências desta sessão.
+      {!guidance && !isLoading && (
+        <div className="rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-center">
+          <p className="mb-4 text-sm text-slate-300">
+            O que está acontecendo na turma agora? Peça uma sugestão sem interromper o fluxo.
           </p>
           <button
             type="button"
             onClick={handleGenerate}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 transition-colors shadow"
+            className="rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-slate-950 shadow transition hover:bg-amber-200"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Gerar Sugestão Demonstrativa
+            Ler o momento da aula
           </button>
         </div>
       )}
 
       {isLoading && (
-        <div className="py-8 text-center text-sm text-slate-300 flex flex-col items-center justify-center gap-2">
-          <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-          <span>Estruturando síntese pedagógica demonstrativa...</span>
+        <div className="flex flex-col items-center gap-3 rounded-xl bg-white/5 py-10 text-sm text-slate-300">
+          <div className="proteca-orb h-8 w-8 rounded-full border-2 border-amber-300 border-t-transparent" />
+          <span>Proteca está organizando uma sugestão...</span>
         </div>
       )}
 
-      {analysis && !isLoading && (
-        <div className="space-y-4 bg-white/10 p-4 rounded-lg border border-white/15">
-          <div>
-            <h4 className="text-xs uppercase tracking-wider font-bold text-amber-300 mb-1">
-              Síntese Pedagógica da Sessão
-            </h4>
-            <p className="text-sm text-slate-100 leading-relaxed">{analysis.summary}</p>
-          </div>
+      {error && <p className="mt-3 rounded-lg bg-rose-400/10 p-3 text-sm text-rose-200">{error}</p>}
 
-          <div>
-            <h4 className="text-xs uppercase tracking-wider font-bold text-amber-300 mb-1.5">
-              Padrões Observados nos Registros
-            </h4>
-            <ul className="list-disc list-inside text-xs text-slate-200 space-y-1">
-              {analysis.observedPatterns.map((pat, idx) => (
-                <li key={idx}>{pat}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-xs uppercase tracking-wider font-bold text-amber-300 mb-1.5">
-              Recomendações Formativas Sugeridas
-            </h4>
-            <div className="space-y-2">
-              {analysis.pedagogicalRecommendations.map((rec, idx) => (
-                <div key={idx} className="p-2.5 rounded bg-white/10 text-xs text-slate-100 flex items-start gap-2">
-                  <span className="font-bold text-amber-400 shrink-0">{idx + 1}.</span>
-                  <span>{rec}</span>
-                </div>
-              ))}
+      {guidance && !isLoading && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-300">Leitura do momento</p>
+              <p className="mt-1 text-lg font-bold capitalize">{guidance.attentionLevel}</p>
             </div>
+            <span className="rounded-full border border-white/20 px-3 py-1 text-xs text-slate-300">
+              {guidance.isMock ? 'Fallback local' : guidance.model}
+            </span>
           </div>
 
-          <div className="pt-2 border-t border-white/10 text-[11px] text-slate-400">
-            <strong className="text-slate-300">Salvaguarda e Limites:</strong> {analysis.limitations}
+          <p className="rounded-xl bg-white/10 p-4 text-sm leading-relaxed text-slate-100">{guidance.observedPattern}</p>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            {guidance.teacherSuggestions.map((suggestion, index) => (
+              <div key={suggestion} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-200">
+                <span className="mr-2 font-bold text-amber-300">{index + 1}.</span>
+                {suggestion}
+              </div>
+            ))}
           </div>
 
-          <div className="flex justify-end pt-2">
-            <button
-              type="button"
-              onClick={handleGenerate}
-              className="text-xs text-amber-300 hover:text-amber-200 underline font-medium"
-            >
-              Regenerar simulação
+          {intervention && (
+            <div className={`rounded-2xl border bg-gradient-to-br p-4 ${stateStyles[intervention.state]}`}>
+              <div className="flex items-start gap-3">
+                <div className="proteca-orb flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/90 font-black text-slate-900" aria-hidden="true">
+                  P
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-white/70">Prévia para a turma · {stateLabels[intervention.state]}</p>
+                  <h4 className="mt-1 font-bold">{intervention.title}</h4>
+                  <p className="mt-1 text-sm text-white/90">{intervention.message}</p>
+                  <p className="mt-3 rounded-lg bg-black/10 p-2 text-sm font-medium text-white">{intervention.prompt}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
+            <p className="max-w-2xl text-[11px] leading-relaxed text-slate-400">{guidance.limitations}</p>
+            <button type="button" onClick={handleGenerate} className="text-xs font-bold text-amber-300 underline hover:text-amber-200">
+              Ler novamente
             </button>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };

@@ -4,9 +4,9 @@ import { SchoolProvider } from '@/context/SchoolContext';
 import { AppShell } from '@/components/AppShell';
 
 export const metadata: Metadata = {
-  title: 'Vigia Escolar — Uso Pedagógico e Gestão de Dispositivos',
+  title: 'Proteca — Foco e Segurança Pedagógica',
   description:
-    'Vigia Escolar organiza o uso pedagógico de Chromebooks e tablets em escolas de educação básica. Acompanhamento docente, registro de ocorrências e orientação formativa.',
+    'Proteca apoia professores no uso pedagógico e seguro de dispositivos escolares, com orientação formativa.',
 };
 
 export default function RootLayout({
