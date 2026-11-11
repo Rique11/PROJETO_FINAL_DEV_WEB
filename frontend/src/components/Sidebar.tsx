@@ -74,7 +74,7 @@ export const Sidebar: React.FC = () => {
             VE
           </div>
           <div>
-            <h2 className="text-base font-bold text-brand-text leading-tight">Vigia Escolar</h2>
+            <h2 className="text-base font-bold text-brand-text leading-tight">Proteca</h2>
             <p className="text-[11px] text-slate-500">Gestão e Apoio Pedagógico</p>
           </div>
         </div>

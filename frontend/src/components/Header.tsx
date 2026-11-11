@@ -15,7 +15,7 @@ export const Header: React.FC = () => {
             <div className="w-8 h-8 rounded bg-brand-primary flex items-center justify-center text-white font-bold text-sm">
               VE
             </div>
-            <span className="font-bold text-brand-text">Vigia Escolar</span>
+            <span className="font-bold text-brand-text">Proteca</span>
           </Link>
           <div className="hidden sm:block">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">

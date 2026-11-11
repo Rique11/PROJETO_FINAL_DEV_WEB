@@ -6,6 +6,8 @@ from app.routers import (
     devices,
     health,
     incidents,
+    ia,
+    learning,
     sessions,
     telemetry,
 )
@@ -13,7 +15,7 @@ from app.routers import (
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    description="Backend FastAPI para o sistema Vigia Escolar. Gerencia sessões pedagógicas, registro de ocorrências e integração com Gemini.",
+    description="Backend FastAPI da Proteca. Gerencia sessões pedagógicas, telemetria leve, contexto educacional e integração segura com Gemini.",
     version="0.1.0",
 )
 
@@ -51,6 +53,16 @@ app.include_router(
 
 app.include_router(
     telemetry.router,
+    prefix=settings.API_V1_STR,
+)
+
+app.include_router(
+    ia.router,
+    prefix=settings.API_V1_STR,
+)
+
+app.include_router(
+    learning.router,
     prefix=settings.API_V1_STR,
 )
 

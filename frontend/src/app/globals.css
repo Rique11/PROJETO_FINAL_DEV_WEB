@@ -21,3 +21,18 @@ body {
   outline: 2px solid #0F766E;
   outline-offset: 2px;
 }
+
+.proteca-orb {
+  animation: proteca-float 3.6s ease-in-out infinite;
+}
+
+@keyframes proteca-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-4px) rotate(2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proteca-orb {
+    animation: none;
+  }
+}

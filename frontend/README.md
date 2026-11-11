@@ -1,4 +1,4 @@
-# Vigia Escolar — Frontend (Next.js)
+# Proteca — Frontend (Next.js)
 
 Interface de acompanhamento pedagógico e gestão de dispositivos educacionais desenvolvida em **Next.js (App Router)** com **TypeScript** e **Tailwind CSS**.
 

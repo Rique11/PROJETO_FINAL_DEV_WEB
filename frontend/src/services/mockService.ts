@@ -221,15 +221,19 @@ class MockSchoolServiceImpl implements SchoolService {
   async requestAIAnalysis(sessionId: string): Promise<AIAnalysis> {
     const sessionIncidents = this.incidents.filter((i) => i.sessionId === sessionId);
     const now = new Date().toISOString();
+    const categories = [...new Set(sessionIncidents.map((incident) => incident.category))];
+    const categorySummary = categories.length
+      ? `Categorias registradas: ${categories.join(', ')}.`
+      : 'Nenhuma ocorrência foi registrada nesta sessão.';
 
     return {
       sessionId,
       generatedAt: now,
-      summary: `Durante a sessão analisada foram identificadas ${sessionIncidents.length} intercorrências envolvendo desvio de foco e tentativa de acesso não pedagógico. O uso dos dispositivos requereu mediação presencial ativa do docente.`,
+      summary: `Foram registrados ${sessionIncidents.length} eventos factuais nesta sessão. ${categorySummary}`,
       observedPatterns: [
-        'Desvio de atenção concentrado em abas paralelas de jogos online e streaming.',
-        'Curiosidade ou tentativa de registro de mídia em sala sem finalidade pedagógica formal.',
-        'Nenhuma tentativa de dano físico intencional registrada nesta sessão.',
+        sessionIncidents.length
+          ? 'Os registros disponíveis devem ser interpretados junto da observação docente.'
+          : 'Não há registros suficientes para apontar um padrão de atenção.',
       ],
       pedagogicalRecommendations: [
         'Realizar alinhamento inicial de 5 minutos sobre privacidade e finalidade pedagógica dos dispositivos antes de distribuir os equipamentos.',
