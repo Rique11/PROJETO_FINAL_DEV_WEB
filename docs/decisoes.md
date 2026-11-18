@@ -14,18 +14,20 @@
 ---
 
 ## 3. Arquitetura da Stack Tecnológica
-- **Decisão:** Frontend Next.js 15 (App Router, estático na Sprint 1), Backend FastAPI Python, Banco PostgreSQL hospedado (Supabase) via SQLModel na Sprint 4, Autenticação JWT na Sprint 3 e IA Google Gemini exclusivamente no backend a partir da Sprint 2.
+- **Decisão:** Frontend Next.js 15, backend FastAPI em Python 3.12, PostgreSQL do Supabase via SQLModel na Sprint 4, JWT na Sprint 3 e Gemini só no backend. Hospedagem no Coolify da VM da equipe. Detalhes e motivos em `docs/adr/0001-stack-e-hospedagem.md` (18/11), que substitui as menções anteriores a Vercel, Render e Fly.io.
 - **Nota sobre a linguagem única:** O enunciado continha uma menção genérica a "todo o sistema em uma única linguagem, Java ou Python", porém detalhava especificamente a stack obrigatória: Next.js + FastAPI + SQLModel + JWT. Optou-se por seguir a stack detalhada da disciplina, mantendo o frontend e o backend desacoplados.
 
 ---
 
 ## 4. Política de Publicação e Controle de Artefatos
-- **Decisão:** O repositório público `https://github.com/plreis/PROJETO_FINAL_DEV_WEB` e a entrega contêm estritamente os arquivos técnicos necessários para execução (`frontend/`, `backend/`, `README.md`, `.gitignore`, licença e workflows).
+- **Decisão:** O repositório público `https://github.com/plreis/proteca` e a entrega contêm estritamente os arquivos técnicos necessários para execução (`frontend/`, `backend/`, `README.md`, `.gitignore`, licença e workflows).
 - **Artefatos Locais:** Prompts operacionais, roteiros internos, minutas do fórum e status de entrega são mantidos no diretório local `DevWeb/PROJETO_FINAL_A3/` e não integram o repositório público.
 
 ---
 
 ## 5. Decisões Arquiteturais para as Demandas Levantadas em Aula
+
+> **Revisão em 18/11:** a captura de tela, os anexos de foto, o painel multitela e o índice de desatenção descritos abaixo saíram do escopo. O motivo (privacidade dos estudantes e prazo) está em `docs/adr/0002-escopo-e-privacidade.md`. O texto abaixo fica como registro do que foi discutido em 04/11.
 
 Durante o uso da Sprint 1 e os alinhamentos presenciais, foram analisadas e decididas três questões centrais de engenharia e produto:
 

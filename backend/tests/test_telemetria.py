@@ -1,90 +1,52 @@
-import pytest
-from fastapi.testclient import TestClient
-
-from app.core.dependencies import get_memory_repository
-from app.main import app
-from app.repositories.memory_repo import MemoryRepository
-
-
-@pytest.fixture
-def repository():
-    return MemoryRepository()
-
-
-@pytest.fixture
-def client(repository):
-    app.dependency_overrides[get_memory_repository] = lambda: repository
-
-    with TestClient(app) as test_client:
-        yield test_client
-
-    app.dependency_overrides.clear()
+def _event(session_id="sess-01", device_id="dev-01", event_type="foco_perdido", **extra):
+    return {
+        "session_id": session_id,
+        "device_id": device_id,
+        "event_type": event_type,
+        "occurred_at": "2026-11-11T10:00:00-03:00",
+        **extra,
+    }
 
 
 def test_create_telemetry_event(client):
-    response = client.post(
-        "/api/v1/telemetry",
-        json={
-            "session_id": "sess-001",
-            "device_id": "dev-001",
-            "event_type": "foco_perdido",
-            "occurred_at": "2026-11-11T10:00:00-03:00",
-        },
-    )
+    response = client.post("/api/v1/telemetry", json=_event())
 
     assert response.status_code == 201
-
     data = response.json()
-    assert data["session_id"] == "sess-001"
-    assert data["device_id"] == "dev-001"
+    assert data["session_id"] == "sess-01"
+    assert data["device_id"] == "dev-01"
     assert data["event_type"] == "foco_perdido"
     assert "id" in data
     assert "received_at" in data
 
 
-def test_filter_events_by_session(client):
+def test_filter_events_by_session(client, open_session):
+    client.post("/api/v1/telemetry", json=_event())
     client.post(
         "/api/v1/telemetry",
-        json={
-            "session_id": "sess-001",
-            "device_id": "dev-001",
-            "event_type": "foco_perdido",
-            "occurred_at": "2026-11-11T10:00:00-03:00",
-        },
+        json=_event(open_session["id"], "dev-03", "foco_recuperado", duration_seconds=60),
     )
 
-    client.post(
-        "/api/v1/telemetry",
-        json={
-            "session_id": "sess-002",
-            "device_id": "dev-002",
-            "event_type": "foco_recuperado",
-            "occurred_at": "2026-11-11T10:01:00-03:00",
-            "duration_seconds": 60,
-        },
-    )
-
-    response = client.get(
-        "/api/v1/telemetry",
-        params={"session_id": "sess-001"},
-    )
+    response = client.get("/api/v1/telemetry", params={"session_id": "sess-01"})
 
     assert response.status_code == 200
-
     events = response.json()
     assert len(events) == 1
-    assert events[0]["session_id"] == "sess-001"
+    assert events[0]["session_id"] == "sess-01"
 
 
 def test_reject_invalid_event_type(client):
-    response = client.post(
-        "/api/v1/telemetry",
-        json={
-            "session_id": "sess-001",
-            "device_id": "dev-001",
-            "event_type": "captura_de_tela",
-            "occurred_at": "2026-11-11T10:00:00-03:00",
-        },
-    )
+    response = client.post("/api/v1/telemetry", json=_event(event_type="captura_de_tela"))
+
+    assert response.status_code == 422
+
+
+def test_reject_event_for_unknown_or_closed_session(client):
+    assert client.post("/api/v1/telemetry", json=_event("sess-x")).status_code == 404
+    assert client.post("/api/v1/telemetry", json=_event("sess-02")).status_code == 409
+
+
+def test_reject_event_from_device_outside_session(client):
+    response = client.post("/api/v1/telemetry", json=_event(device_id="dev-03"))
 
     assert response.status_code == 422

@@ -1,75 +1,52 @@
-# Proteca — Backend API
+# Proteca — API
 
-Backend desenvolvido em Python com **FastAPI**, estruturado para gerenciar regras de negócio, telemetria leve de sessão, contexto educacional público e integração opcional com a API Gemini para orientação pedagógica assistida.
+API em FastAPI para sessões de aula, dispositivos, ocorrências, telemetria leve e a Proteca Live com Gemini.
 
-> **Status da Sprint 2:** Rotas de negócio, telemetria, Proteca Live com fallback local e contexto opcional via Wikipedia/Open Library estão implementados. A chave Gemini é opcional em desenvolvimento e necessária apenas para geração real no ambiente publicado.
+## Estrutura
 
----
-
-## 1. Estrutura de Diretórios
-
-```
-backend/
-├── app/
-│   ├── auth/           # Módulo de autenticação JWT e senhas (Argon2)
-│   ├── core/           # Configurações e variáveis de ambiente (Pydantic Settings)
-│   ├── models/         # Modelos de dados relacionais (SQLModel)
-│   ├── routers/        # Rotas da API (health, sessions, incidents, telemetry, ia, learning)
-│   ├── schemas/        # Contratos de entrada e saída (Pydantic v2)
-│   ├── services/       # Gemini/fallback e contexto educacional
-│   └── main.py         # Instância do FastAPI e middlewares (CORS)
-├── tests/              # Testes automatizados (pytest e TestClient)
-├── .env.example        # Exemplo inerte de configuração
-├── requirements.txt    # Dependências do projeto
-└── README.md
+```text
+app/
+├── core/          configuração (env), erros de domínio e dependências
+├── routers/       uma rota por recurso (school, devices, sessions, incidents, telemetry, ia, learning, health)
+├── schemas/       contratos Pydantic, um arquivo por recurso
+├── repositories/  repositório em memória e dados de demonstração (seed)
+├── services/      Gemini/fallback, sinais agregados da sessão e contexto educacional
+├── models/        tabelas SQLModel (Sprint 4)
+├── auth/          JWT (Sprint 3)
+└── main.py        app, CORS e registro das rotas
+tests/             pytest com TestClient
+Dockerfile         imagem de produção (Python 3.12)
 ```
 
----
-
-## 2. Requisitos de Ambiente
-
-- Python 3.11+ (testado com Python 3.14)
-- Pip / ambiente virtual (`venv`)
-
----
-
-## 3. Instalação e Execução Local
+## Executar
 
 ```bash
-# Criar e ativar ambiente virtual
 python3 -m venv .venv
 source .venv/bin/activate
-
-# Instalar dependências
-pip install -r requirements.txt
-
-# Configurar variáveis de ambiente
+pip install -r requirements-dev.txt
 cp .env.example .env
-
-# Executar servidor de desenvolvimento
 uvicorn app.main:app --reload --port 8000
+pytest
 ```
 
----
+`/docs` traz o Swagger. `/api/v1/health` mostra se a IA está em modo `gemini` ou `local-fallback`.
 
-## 4. Documentação Interativa
+## Erros
 
-Com o servidor em execução, acesse:
-- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
-- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
-- Verificação de saúde: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
+As regras de negócio levantam erros de domínio (`app/core/errors.py`), convertidos em:
 
----
+- **404** quando turma, aparelho, sessão ou ocorrência não existe;
+- **409** quando o estado não permite a ação (aparelho em uso, sessão já encerrada, transição inválida);
+- **422** quando o corpo é inválido ou referencia um aparelho fora da sessão.
 
-## 5. Rotas da Sprint 2
+## Proteca Live
 
-- `POST /api/v1/ia/live`: recebe objetivo e sinais agregados; retorna orientação estruturada e intervenção Proteca.
-- `GET /api/v1/learning/context?query=...`: busca até quatro referências em Wikipedia/Open Library. Falhas externas retornam lista vazia e uma limitação explícita.
+`POST /api/v1/sessions/{id}/live` conta, na própria API, os aparelhos da sessão, os eventos de foco perdido, os alertas e as ocorrências abertas por categoria. Só esses números e o objetivo da aula vão para o Gemini. A resposta inclui `signals`, para o professor ver em que dados a sugestão se baseou.
 
-O Live nunca recebe notas individuais, CSV, captura de tela ou identificadores de alunos. Sem `GEMINI_API_KEY`, ele retorna `model: "local-fallback"` e `is_mock: true`.
+Sem chave, ou se o Gemini falhar, a resposta vem do fallback local com `model: "local-fallback"` e `is_mock: true`. O motivo da falha aparece no log (código HTTP ou tipo de erro), sem a chave.
 
-## 6. Testes Automatizados
+`POST /api/v1/ia/live` faz o mesmo com sinais enviados pelo cliente e fica para testes e compatibilidade.
 
-```bash
-pytest tests/
-```
+## Deploy
+
+Ver `../docs/deploy-coolify.md`.

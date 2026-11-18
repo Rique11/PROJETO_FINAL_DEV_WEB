@@ -1,25 +1,48 @@
-from fastapi.testclient import TestClient
 import httpx
 
-from app.main import app
-from app.schemas.schemas import (
-    AILiveGuidanceRequest,
-    AILiveGuidanceResponse,
-    ProtecaIntervention,
-    ProtecaState,
-)
+from app.core.config import settings
+from app.schemas.ai import AILiveGuidanceRequest
 from app.services.ai_guidance import generate_live_guidance
+from tests.conftest import OBJECTIVE
 
 
-client = TestClient(app)
+class FakeResponse:
+    def __init__(self, text):
+        self.text = text
+
+    def raise_for_status(self):
+        return None
+
+    def json(self):
+        return {"candidates": [{"content": {"parts": [{"text": self.text}]}}]}
 
 
-def test_live_guidance_returns_honest_local_fallback_without_key():
+class FakeClient:
+    calls = []
+
+    def __init__(self, response=None, error=None):
+        self.response = response
+        self.error = error
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return None
+
+    def post(self, *args, **kwargs):
+        FakeClient.calls.append(kwargs)
+        if self.error:
+            raise self.error
+        return self.response
+
+
+def test_live_guidance_returns_honest_local_fallback_without_key(client):
     response = client.post(
         "/api/v1/ia/live",
         json={
             "session_id": "sess-001",
-            "objective": "Compreender como proteger dados pessoais na escola.",
+            "objective": OBJECTIVE,
             "focus": {
                 "active_devices": 10,
                 "focus_lost_events": 12,
@@ -32,125 +55,106 @@ def test_live_guidance_returns_honest_local_fallback_without_key():
 
     assert response.status_code == 200
     data = response.json()
-    assert data["session_id"] == "sess-001"
     assert data["is_mock"] is True
     assert data["model"] == "local-fallback"
     assert data["intervention"]["state"] == "curiosidade"
     assert "não diagnostica" in data["limitations"]
 
 
-def test_live_guidance_rejects_short_objective():
-    response = client.post(
-        "/api/v1/ia/live",
-        json={"session_id": "sess-001", "objective": "foco"},
-    )
+def test_live_guidance_rejects_short_objective(client):
+    response = client.post("/api/v1/ia/live", json={"session_id": "s", "objective": "foco"})
 
     assert response.status_code == 422
 
 
-def test_ai_advice_adapts_a_controlled_guidance_response(monkeypatch):
-    def fake_guidance(request):
-        return AILiveGuidanceResponse(
-            session_id=request.session_id,
-            model="fake-gemini",
-            generated_at="2026-11-11T12:00:00Z",
-            attention_level="foco",
-            observed_pattern="A turma está conectada ao objetivo.",
-            teacher_suggestions=["Peça um exemplo aplicado."],
-            intervention=ProtecaIntervention(
-                state=ProtecaState.CURIOSIDADE,
-                title="Pergunta Proteca",
-                message="Uma pista pode aprofundar a conversa.",
-                prompt="Qual exemplo confirma essa ideia?",
-            ),
-            limitations="Sugestão para revisão docente.",
-            is_mock=False,
-        )
-
-    monkeypatch.setattr("app.services.ai_guidance.generate_live_guidance", fake_guidance)
-    response = client.post(
-        "/api/v1/ia/sessions/sess-001/ai-advice",
-        json={"objective": "Compreender como proteger dados pessoais na escola."},
+def test_session_live_uses_signals_from_the_session(client, open_session):
+    session_id = open_session["id"]
+    client.post(
+        "/api/v1/incidents",
+        json={
+            "session_id": session_id,
+            "device_id": "dev-04",
+            "category": "privacidade_exposicao",
+            "description": "Tablet usado para fotografar colegas sem autorização.",
+        },
     )
+    client.post(
+        "/api/v1/telemetry",
+        json={
+            "session_id": session_id,
+            "device_id": "dev-03",
+            "event_type": "foco_perdido",
+            "occurred_at": "2026-11-18T10:00:00-03:00",
+        },
+    )
+
+    response = client.post(f"/api/v1/sessions/{session_id}/live")
 
     assert response.status_code == 200
     data = response.json()
-    assert data["session_summary"] == "A turma está conectada ao objetivo."
-    assert data["pedagogical_interventions"] == [
-        "Peça um exemplo aplicado.",
-        "Uma pista pode aprofundar a conversa.",
-    ]
+    assert data["attention_level"] == "alerta"
+    assert data["signals"]["active_devices"] == 2
+    assert data["signals"]["focus_lost_events"] == 1
+    assert data["signals"]["safety_alerts"] == 1
+    assert data["signals"]["incident_categories"] == {"privacidade_exposicao": 1}
+
+
+def test_session_live_requires_open_session(client):
+    assert client.post("/api/v1/sessions/sess-x/live").status_code == 404
+    assert client.post("/api/v1/sessions/sess-02/live").status_code == 409
 
 
 def test_live_guidance_parses_a_successful_gemini_response(monkeypatch):
-    class FakeResponse:
-        def raise_for_status(self):
-            return None
-
-        def json(self):
-            return {
-                "candidates": [
-                    {
-                        "content": {
-                            "parts": [
-                                {
-                                    "text": '{"attention_level":"foco","observed_pattern":"A turma avançou.","teacher_suggestions":["Peça uma síntese."],"intervention":null}'
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-
-    class FakeClient:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            return None
-
-        def post(self, *args, **kwargs):
-            return FakeResponse()
-
-    monkeypatch.setattr("app.core.config.settings.GEMINI_API_KEY", "test-key")
-    monkeypatch.setattr("app.services.ai_guidance.httpx.Client", lambda **kwargs: FakeClient())
-    response = generate_live_guidance(
-        AILiveGuidanceRequest(
-            session_id="sess-001",
-            objective="Compreender como proteger dados pessoais na escola.",
-        )
+    FakeClient.calls = []
+    text = (
+        '{"attention_level":"foco","observed_pattern":"A turma avançou.",'
+        '"teacher_suggestions":["Peça uma síntese."],"intervention":null}'
+    )
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(
+        "app.services.ai_guidance.httpx.Client",
+        lambda **kwargs: FakeClient(response=FakeResponse(text)),
     )
 
-    assert response.model == "gemini-1.5-flash"
+    response = generate_live_guidance(
+        AILiveGuidanceRequest(session_id="sess-001", objective=OBJECTIVE)
+    )
+
+    assert response.model == settings.GEMINI_MODEL
     assert response.is_mock is False
     assert response.observed_pattern == "A turma avançou."
+    assert FakeClient.calls[0]["headers"] == {"x-goog-api-key": "test-key"}
+    assert "params" not in FakeClient.calls[0]
 
 
 def test_live_guidance_falls_back_when_gemini_fails(monkeypatch):
-    class FailingClient:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            return None
-
-        def post(self, *args, **kwargs):
-            raise httpx.ConnectError(
-                "provider unavailable",
-                request=httpx.Request("POST", "https://example.com"),
-            )
-
-    monkeypatch.setattr("app.core.config.settings.GEMINI_API_KEY", "test-key")
+    error = httpx.ConnectError(
+        "provider unavailable",
+        request=httpx.Request("POST", "https://example.com"),
+    )
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "test-key")
     monkeypatch.setattr(
         "app.services.ai_guidance.httpx.Client",
-        lambda **kwargs: FailingClient(),
+        lambda **kwargs: FakeClient(error=error),
     )
+
     response = generate_live_guidance(
-        AILiveGuidanceRequest(
-            session_id="sess-001",
-            objective="Compreender como proteger dados pessoais na escola.",
-        )
+        AILiveGuidanceRequest(session_id="sess-001", objective=OBJECTIVE)
     )
 
     assert response.model == "local-fallback"
+    assert response.is_mock is True
+
+
+def test_live_guidance_falls_back_on_invalid_json(monkeypatch):
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(
+        "app.services.ai_guidance.httpx.Client",
+        lambda **kwargs: FakeClient(response=FakeResponse("isto não é json")),
+    )
+
+    response = generate_live_guidance(
+        AILiveGuidanceRequest(session_id="sess-001", objective=OBJECTIVE)
+    )
+
     assert response.is_mock is True

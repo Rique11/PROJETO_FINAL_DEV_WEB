@@ -2,7 +2,7 @@ from urllib.parse import quote_plus
 
 import httpx
 
-from app.schemas.schemas import LearningContextItem, LearningContextResponse
+from app.schemas.learning import LearningContextItem, LearningContextResponse
 
 
 def _search_wikipedia(client: httpx.Client, query: str) -> list[LearningContextItem]:
