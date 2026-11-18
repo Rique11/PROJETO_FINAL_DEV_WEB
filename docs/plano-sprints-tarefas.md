@@ -34,7 +34,7 @@ A review de 11/11 aconteceu sem a API publicada. Em 18/11 a auditoria encontrou 
 - Modelo `gemini-1.5-flash` desativado pelo Google; a IA nunca seria chamada de verdade.
 - Schemas com nomes diferentes dos tipos do frontend e quatro formatos de resposta de IA.
 
-Falta: publicar a API no Coolify seguindo `docs/deploy-coolify.md` e conferir `/docs` e o Live com a chave real.
+Falta (#4): publicar a API no Coolify seguindo `docs/deploy-coolify.md` e conferir `/docs` e o Live com a chave real.
 
 ## Sprint 3 — até 23/11
 
@@ -42,10 +42,10 @@ Critérios do professor: site público consumindo a API real, login funcionando,
 
 | Pedro | Henrique |
 |---|---|
-| Autenticação no backend: `/auth/token`, `/auth/me`, senha com Argon2, JWT com expiração, perfis professor e gestor | Cliente HTTP do frontend (`apiClient.ts`) com URL da API por variável de ambiente e tratamento de erro |
-| Tela de login, `AuthContext` e redirecionamento de páginas sem login | Sessões e Dispositivos ligados à API, com carregamento e erro |
-| Painel Proteca Live usando `POST /sessions/{id}/live` | Ocorrências ligadas à API (lista, filtros, nova, mudança de status) |
-| Dockerfile do frontend e deploy do site no Coolify | Proteção das rotas da API com JWT e testes de 401 e 403 |
+| #5 Autenticação no backend: `/auth/token`, `/auth/me`, senha com Argon2, JWT com expiração, perfis professor e gestor | #6 Cliente HTTP do frontend (`apiClient.ts`) com URL da API por variável de ambiente e tratamento de erro |
+| #7 Tela de login, `AuthContext` e redirecionamento de páginas sem login | #10 Sessões e Dispositivos ligados à API, com carregamento e erro |
+| #8 Painel Proteca Live usando `POST /sessions/{id}/live` | #11 Ocorrências ligadas à API (lista, filtros, nova, mudança de status) |
+| #9 Dockerfile do frontend e deploy do site no Coolify | #12 Proteção das rotas da API com JWT e testes de 401 e 403 |
 
 Ordem: a autenticação do backend (Pedro) sai primeiro, até 20/11, porque a proteção das rotas (Henrique) depende dela. O cliente HTTP (Henrique) pode começar no mesmo dia, já que no começo as rotas ainda estão abertas.
 
@@ -55,8 +55,8 @@ Critérios do professor: modelos SQLModel coerentes, dados mantidos após reinic
 
 | Pedro | Henrique |
 |---|---|
-| Modelos SQLModel com relacionamentos, conexão com o Supabase e `SessionDep` | Repositório SQL com as mesmas operações do repositório em memória |
-| Carga inicial de dados e usuários de demonstração | Teste de persistência: criar dados, reiniciar a API no Coolify e conferir |
-| Documentação em PDF (dupla, descrição e README) e ZIP com `frontend/` e `backend/` | Manual do usuário em PDF com telas do sistema publicado |
+| #13 Modelos SQLModel com relacionamentos, conexão com o Supabase e `SessionDep` | #15 Repositório SQL com as mesmas operações do repositório em memória |
+| #14 Carga inicial de dados e usuários de demonstração | #16 Teste de persistência: criar dados, reiniciar a API no Coolify e conferir |
+| #17 Documentação em PDF (dupla, descrição e README) e ZIP com `frontend/` e `backend/` | #18 Manual do usuário em PDF com telas do sistema publicado |
 
-Os dois: revisão final do fluxo em produção, pitch de 2 minutos e envio no Moodle até 30/11.
+Os dois (#19): revisão final do fluxo em produção, pitch de 2 minutos e envio no Moodle até 30/11.
