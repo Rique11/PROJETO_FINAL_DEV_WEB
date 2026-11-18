@@ -27,3 +27,15 @@ Resultado de aprendizagem que orienta a atividade e dá contexto para as pergunt
 ## Ocorrência
 
 Registro factual de um evento que demanda mediação ou acompanhamento do professor, com decisão humana sobre seu encaminhamento.
+
+## Dispositivo
+
+Chromebook, tablet ou notebook da escola, identificado pelo número de patrimônio. Pode estar disponível, em uso (vinculado a uma sessão aberta) ou em manutenção.
+
+## Gestor
+
+Pessoa da equipe pedagógica ou da direção que acompanha o inventário e as ocorrências de todas as turmas.
+
+## Fallback local
+
+Resposta da Proteca Live gerada por regras fixas da API quando o Gemini não está configurado ou falha. Sempre marcada com `is_mock: true`.
