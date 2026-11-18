@@ -1,95 +1,57 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
 from app.core.dependencies import MemoryRepositoryDependency
-from app.schemas.schemas import (
+from app.schemas.ai import AILiveGuidanceResponse
+from app.schemas.sessions import (
     SessionClose,
     SessionCreate,
     SessionResponse,
+    SessionStatus,
 )
+from app.services.ai_guidance import generate_live_guidance
+from app.services.session_signals import build_live_request
+
+router = APIRouter(prefix="/sessions", tags=["Sessões"])
 
 
-router = APIRouter(
-    prefix="/sessions",
-    tags=["Sessões"],
-)
-
-
-@router.get(
-    "",
-    response_model=list[SessionResponse],
-)
+@router.get("", response_model=list[SessionResponse])
 def list_sessions(
     repository: MemoryRepositoryDependency,
+    session_status: SessionStatus | None = None,
 ):
-    return repository.list_sessions()
+    return repository.list_sessions(status=session_status)
 
 
-@router.post(
-    "",
-    response_model=SessionResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_session(
-    data: SessionCreate,
-    repository: MemoryRepositoryDependency,
-):
-    try:
-        return repository.create_session(data)
-    except LookupError as error:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(error),
-        ) from error
-    except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(error),
-        ) from error
+@router.post("", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
+def create_session(data: SessionCreate, repository: MemoryRepositoryDependency):
+    return repository.create_session(data)
 
 
-@router.get(
-    "/{session_id}",
-    response_model=SessionResponse,
-)
-def get_session(
-    session_id: str,
-    repository: MemoryRepositoryDependency,
-):
-    session = repository.get_session(session_id)
-
-    if session is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Sessão não encontrada.",
-        )
-
-    return session
+@router.get("/{session_id}", response_model=SessionResponse)
+def get_session(session_id: str, repository: MemoryRepositoryDependency):
+    return repository.get_session(session_id)
 
 
-@router.patch(
-    "/{session_id}/close",
-    response_model=SessionResponse,
-)
+@router.patch("/{session_id}/close", response_model=SessionResponse)
 def close_session(
     session_id: str,
     data: SessionClose,
     repository: MemoryRepositoryDependency,
 ):
-    try:
-        session = repository.close_session(
-            session_id=session_id,
-            justification=data.justification,
-        )
-    except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(error),
-        ) from error
+    return repository.close_session(session_id, data.justification)
 
-    if session is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Sessão não encontrada.",
-        )
 
-    return session
+@router.post(
+    "/{session_id}/live",
+    response_model=AILiveGuidanceResponse,
+    tags=["Inteligência pedagógica"],
+    summary="Proteca Live da sessão",
+    description=(
+        "Calcula sinais agregados da sessão (telemetria e ocorrências abertas) e pede ao "
+        "Gemini uma orientação pedagógica. Sem chave ou com falha do provedor, devolve o "
+        "fallback local com is_mock=true."
+    ),
+)
+def session_live(session_id: str, repository: MemoryRepositoryDependency):
+    session = repository.get_open_session(session_id)
+    return generate_live_guidance(build_live_request(repository, session))

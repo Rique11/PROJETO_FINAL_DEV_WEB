@@ -1,22 +1,47 @@
 import json
+import logging
 from datetime import datetime, timezone
+from typing import Any
+
 import httpx
 
 from app.core.config import settings
-from app.schemas.schemas import (
+from app.schemas.ai import (
     AILiveGuidanceRequest,
     AILiveGuidanceResponse,
-    AIPedagogicalAdvice,
-    AIPedagogicalAdviceRequest,
     ProtecaIntervention,
     ProtecaState,
 )
 
+logger = logging.getLogger(__name__)
+
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 LIMITATIONS = (
     "Orientação de apoio ao professor; não diagnostica alunos, não prova intenção "
     "e não substitui observação humana ou decisão pedagógica."
 )
+
+RESPONSE_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "attention_level": {"type": "STRING", "enum": ["foco", "atenção", "alerta"]},
+        "observed_pattern": {"type": "STRING"},
+        "teacher_suggestions": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "intervention": {
+            "type": "OBJECT",
+            "nullable": True,
+            "properties": {
+                "state": {"type": "STRING", "enum": [state.value for state in ProtecaState]},
+                "title": {"type": "STRING"},
+                "message": {"type": "STRING"},
+                "prompt": {"type": "STRING"},
+            },
+            "required": ["state", "title", "message", "prompt"],
+        },
+    },
+    "required": ["attention_level", "observed_pattern", "teacher_suggestions"],
+}
 
 
 def _fallback(request: AILiveGuidanceRequest) -> AILiveGuidanceResponse:
@@ -61,19 +86,23 @@ def _fallback(request: AILiveGuidanceRequest) -> AILiveGuidanceResponse:
         ],
         intervention=intervention,
         limitations=LIMITATIONS,
+        signals=focus,
         is_mock=True,
     )
 
 
 def _prompt(request: AILiveGuidanceRequest) -> str:
     return f"""
-Você é Proteca, um assistente de apoio pedagógico e segurança digital para professores.
-Gere uma orientação breve, acolhedora e acionável para uma aula.
+Você é Proteca, um assistente de apoio pedagógico e segurança digital para professores
+da educação básica que usam Chromebooks e tablets fornecidos pelo governo.
+Gere uma orientação breve, acolhedora e acionável para o professor usar agora na aula.
 Nunca diagnostique alunos, atribua culpa, faça ranking ou recomende punição.
 Use somente os sinais agregados abaixo; não invente dados individuais.
-Responda JSON com as chaves: attention_level, observed_pattern,
-teacher_suggestions (array com no máximo 2 itens), intervention (objeto ou null).
-intervention deve conter state (acolhimento, curiosidade ou alerta), title, message e prompt.
+Quando houver ocorrência de privacidade (câmera, imagem de colegas), oriente uma conversa
+coletiva sobre consentimento e direito de imagem.
+Responda em português, em JSON, com: attention_level (foco, atenção ou alerta),
+observed_pattern, teacher_suggestions (no máximo 2 frases curtas) e intervention
+(objeto com state, title, message e prompt, ou null).
 Objetivo da aula: {request.objective}
 Sinais agregados: {request.focus.model_dump_json()}
 """.strip()
@@ -96,6 +125,7 @@ def _parse_generated(
             else None
         ),
         limitations=LIMITATIONS,
+        signals=request.focus,
         is_mock=False,
     )
 
@@ -104,53 +134,33 @@ def generate_live_guidance(request: AILiveGuidanceRequest) -> AILiveGuidanceResp
     if not settings.GEMINI_API_KEY:
         return _fallback(request)
 
-    endpoint = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{settings.GEMINI_MODEL}:generateContent"
-    )
     body = {
         "contents": [{"parts": [{"text": _prompt(request)}]}],
-        "generationConfig": {"responseMimeType": "application/json"},
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "responseSchema": RESPONSE_SCHEMA,
+        },
     }
 
     try:
-        with httpx.Client(timeout=15.0) as client:
+        with httpx.Client(timeout=settings.GEMINI_TIMEOUT_SECONDS) as client:
             response = client.post(
-                endpoint,
-                params={"key": settings.GEMINI_API_KEY},
+                GEMINI_URL.format(model=settings.GEMINI_MODEL),
+                headers={"x-goog-api-key": settings.GEMINI_API_KEY},
                 json=body,
             )
             response.raise_for_status()
             text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
             return _parse_generated(request, json.loads(text))
-    except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError):
-        return _fallback(request).model_copy(
-            update={"model": "local-fallback", "is_mock": True}
+    except httpx.HTTPStatusError as error:
+        logger.warning(
+            "Gemini respondeu HTTP %s para o modelo %s; usando fallback local.",
+            error.response.status_code,
+            settings.GEMINI_MODEL,
         )
-
-
-def generate_pedagogical_advice(
-    session_id: str,
-    request: AIPedagogicalAdviceRequest,
-) -> AIPedagogicalAdvice:
-    guidance = generate_live_guidance(
-        AILiveGuidanceRequest(
-            session_id=session_id,
-            objective=request.objective,
-            focus=request.focus,
+    except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as error:
+        logger.warning(
+            "Falha ao usar o Gemini (%s); usando fallback local.",
+            type(error).__name__,
         )
-    )
-    interventions = list(guidance.teacher_suggestions)
-    if guidance.intervention:
-        interventions.append(guidance.intervention.message)
-
-    return AIPedagogicalAdvice(
-        session_summary=guidance.observed_pattern,
-        engagement_diagnostic=guidance.attention_level,
-        detected_patterns=[guidance.observed_pattern],
-        pedagogical_interventions=interventions[:2],
-        recommendations_for_management=[
-            "Validar a sugestão com observação docente antes de qualquer encaminhamento."
-        ],
-        ethical_disclaimer=guidance.limitations,
-    )
+    return _fallback(request)

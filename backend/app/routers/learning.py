@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 
-from app.schemas.schemas import LearningContextResponse
+from app.schemas.learning import LearningContextResponse
 from app.services.learning_context import search_learning_context
 
 

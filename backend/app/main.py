@@ -1,73 +1,50 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.core.errors import register_error_handlers
 from app.routers import (
     devices,
     health,
-    incidents,
     ia,
+    incidents,
     learning,
+    school,
     sessions,
     telemetry,
 )
 
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
+    version=settings.VERSION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    description="Backend FastAPI da Proteca. Gerencia sessões pedagógicas, telemetria leve, contexto educacional e integração segura com Gemini.",
-    version="0.1.0",
+    description=(
+        "API da Proteca: sessões de aula, dispositivos escolares, ocorrências, "
+        "telemetria leve e orientação pedagógica com Gemini."
+    ),
 )
 
-# Configuração de CORS
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.BACKEND_CORS_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
     )
 
-# Roteador de saúde
-app.include_router(
-    health.router,
-    prefix=settings.API_V1_STR,
-    tags=["Saúde"],
-)
+register_error_handlers(app)
 
-app.include_router(
-    devices.router,
-    prefix=settings.API_V1_STR,
-)
-
-app.include_router(
-    sessions.router,
-    prefix=settings.API_V1_STR,
-)
-
-app.include_router(
-    incidents.router,
-    prefix=settings.API_V1_STR,
-)
-
-app.include_router(
-    telemetry.router,
-    prefix=settings.API_V1_STR,
-)
-
-app.include_router(
-    ia.router,
-    prefix=settings.API_V1_STR,
-)
-
-app.include_router(
-    learning.router,
-    prefix=settings.API_V1_STR,
-)
+for module in (health, school, devices, sessions, incidents, telemetry, ia, learning):
+    app.include_router(module.router, prefix=settings.API_V1_STR)
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def root():
     return {
         "sistema": settings.PROJECT_NAME,
