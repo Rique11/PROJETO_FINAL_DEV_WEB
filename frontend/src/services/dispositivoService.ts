@@ -31,12 +31,22 @@ function toDevice(data: DeviceResponse): Device {
 
 export const deviceService = {
   async getDevices(): Promise<Device[]> {
-    const response = await apiRequest<DeviceResponse[]>('/devices');
+    const response = await apiRequest<DeviceResponse[]>('/devices', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('proteca_token') || ''}`,
+      },
+    });
     return response.map(toDevice);
   },
 
   async getDeviceById(id: string): Promise<Device> {
-    const response = await apiRequest<DeviceResponse>(`/devices/${id}`);
+    const response = await apiRequest<DeviceResponse>(`/devices/${id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('proteca_token') || ''}`,
+      },
+    });
     return toDevice(response);
   },
 

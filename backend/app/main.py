@@ -2,10 +2,12 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi import Depends
 from app.core.config import settings
 from app.core.errors import register_error_handlers
+from app.auth.middleware import get_current_user
 from app.routers import (
+    auth,   
     devices,
     health,
     ia,
@@ -39,9 +41,14 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 register_error_handlers(app)
-
-for module in (health, school, devices, sessions, incidents, telemetry, ia, learning):
-    app.include_router(module.router, prefix=settings.API_V1_STR)
+app.include_router(auth.router, prefix=settings.API_V1_STR)
+app.include_router(health.router, prefix=settings.API_V1_STR)
+for module in (school, devices, sessions, incidents, telemetry, ia, learning):
+    app.include_router(
+        module.router,
+        prefix=settings.API_V1_STR,
+        dependencies=[Depends(get_current_user)],
+    )
 
 
 @app.get("/", include_in_schema=False)
