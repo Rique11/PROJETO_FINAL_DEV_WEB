@@ -21,56 +21,7 @@ export const INITIAL_CLASSROOMS: Classroom[] = [
   },
 ];
 
-export const INITIAL_DEVICES: Device[] = [
-  {
-    id: 'dev-01',
-    schoolId: 'sch-01',
-    patrimonio: 'DEV-CR-0101',
-    type: 'chromebook',
-    model: 'Lenovo 300e Chromebook Gen 3',
-    status: 'em_uso',
-  },
-  {
-    id: 'dev-02',
-    schoolId: 'sch-01',
-    patrimonio: 'DEV-CR-0102',
-    type: 'chromebook',
-    model: 'Lenovo 300e Chromebook Gen 3',
-    status: 'em_uso',
-  },
-  {
-    id: 'dev-03',
-    schoolId: 'sch-01',
-    patrimonio: 'DEV-TB-0201',
-    type: 'tablet',
-    model: 'Samsung Galaxy Tab A9+ Educação',
-    status: 'disponivel',
-  },
-  {
-    id: 'dev-04',
-    schoolId: 'sch-01',
-    patrimonio: 'DEV-TB-0202',
-    type: 'tablet',
-    model: 'Samsung Galaxy Tab A9+ Educação',
-    status: 'disponivel',
-  },
-  {
-    id: 'dev-05',
-    schoolId: 'sch-01',
-    patrimonio: 'DEV-NB-0301',
-    type: 'notebook',
-    model: 'Positivo Master N1250 Educacional',
-    status: 'manutencao',
-  },
-  {
-    id: 'dev-06',
-    schoolId: 'sch-01',
-    patrimonio: 'DEV-CR-0103',
-    type: 'chromebook',
-    model: 'Lenovo 300e Chromebook Gen 3',
-    status: 'disponivel',
-  },
-];
+export const INITIAL_DEVICES: Device[] = [];
 
 export const INITIAL_SESSIONS: LessonSession[] = [
   {

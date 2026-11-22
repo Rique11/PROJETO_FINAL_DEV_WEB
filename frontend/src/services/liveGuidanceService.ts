@@ -1,3 +1,4 @@
+import { apiRequest } from './api';
 import { LiveGuidance } from '@/types';
 
 interface LiveGuidanceRequest {
@@ -12,24 +13,36 @@ interface LiveGuidanceRequest {
   };
 }
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
-
-function toGuidance(data: {
+interface LiveGuidanceResponse {
   session_id: string;
   model: string;
   generated_at: string;
   attention_level: string;
   observed_pattern: string;
   teacher_suggestions: string[];
-  intervention?: {
-    state: 'acolhimento' | 'curiosidade' | 'alerta';
-    title: string;
-    message: string;
-    prompt: string;
-  } | null;
+  intervention: LiveGuidance['intervention'];
   limitations: string;
   is_mock: boolean;
-}): LiveGuidance {
+}
+
+export async function requestLiveGuidance(
+  request: LiveGuidanceRequest
+): Promise<LiveGuidance> {
+  const data = await apiRequest<LiveGuidanceResponse>('/ia/live', {
+    method: 'POST',
+    body: {
+      session_id: request.sessionId,
+      objective: request.objective,
+      focus: {
+        active_devices: request.focus.activeDevices,
+        focus_lost_events: request.focus.focusLostEvents,
+        safety_alerts: request.focus.safetyAlerts,
+        open_incidents: request.focus.openIncidents,
+        elapsed_minutes: request.focus.elapsedMinutes,
+      },
+    },
+  });
+
   return {
     sessionId: data.session_id,
     model: data.model,
@@ -41,32 +54,4 @@ function toGuidance(data: {
     limitations: data.limitations,
     isMock: data.is_mock,
   };
-}
-
-export async function requestLiveGuidance(
-  request: LiveGuidanceRequest
-): Promise<LiveGuidance | null> {
-  if (!apiBaseUrl) return null;
-
-  const response = await fetch(`${apiBaseUrl}/ia/live`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      session_id: request.sessionId,
-      objective: request.objective,
-      focus: {
-        active_devices: request.focus.activeDevices,
-        focus_lost_events: request.focus.focusLostEvents,
-        safety_alerts: request.focus.safetyAlerts,
-        open_incidents: request.focus.openIncidents,
-        elapsed_minutes: request.focus.elapsedMinutes,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Live guidance request failed with status ${response.status}`);
-  }
-
-  return toGuidance(await response.json());
 }

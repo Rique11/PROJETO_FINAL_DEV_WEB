@@ -1,18 +1,21 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSchool } from '@/context/SchoolContext';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { FilterBar } from '@/components/FilterBar';
 import { EmptyState } from '@/components/EmptyState';
 
+
 export default function DispositivosPage() {
   const { devices, sessions } = useSchool();
-
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+
+
+
 
   const filteredDevices = useMemo(() => {
     return devices.filter((d) => {
@@ -98,7 +101,6 @@ export default function DispositivosPage() {
           searchPlaceholder="Buscar por patrimônio ou modelo..."
         />
       </div>
-
       {filteredDevices.length === 0 ? (
         <EmptyState
           title="Nenhum dispositivo encontrado"

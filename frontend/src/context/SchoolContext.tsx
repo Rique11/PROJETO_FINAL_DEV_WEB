@@ -13,6 +13,7 @@ import {
   LessonSession,
 } from '@/types';
 import { mockService } from '@/services/mockService';
+import {deviceService, CreateDeviceDTO} from '@/services/dispositivoService';
 import { requestLiveGuidance as requestLiveGuidanceFromApi } from '@/services/liveGuidanceService';
 
 interface Notification {
@@ -64,7 +65,7 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
     const [s, c, d, sess, inc] = await Promise.all([
       mockService.getSchool(),
       mockService.getClassrooms(),
-      mockService.getDevices(),
+      deviceService.getDevices(),
       mockService.getSessions(),
       mockService.getIncidents(),
     ]);
