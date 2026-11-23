@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = INSECURE_SECRET_KEY
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    SENHA_HASH_GERADO: str = "COLE_AQUI_O_HASH_GERADO"  # Hash de senha para teste (Sprint 3)
+    SENHA_TESTE_HASH: str = "COLE_AQUI_O_HASH_GERADO"  # Hash de senha para teste (Sprint 3)
     # Banco de dados (Sprint 4). Sem valor, a API usa o repositório em memória.
     DATABASE_URL: str | None = None
     SEED_DEMO_DATA: bool = True
