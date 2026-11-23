@@ -13,6 +13,8 @@ import {
   LessonSession,
 } from '@/types';
 import { mockService } from '@/services/mockService';
+import {deviceService, CreateDeviceDTO} from '@/services/dispositivoService';
+import { sessionService } from '@/services/sessionService';
 import { requestLiveGuidance as requestLiveGuidanceFromApi } from '@/services/liveGuidanceService';
 
 interface Notification {
@@ -64,8 +66,8 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
     const [s, c, d, sess, inc] = await Promise.all([
       mockService.getSchool(),
       mockService.getClassrooms(),
-      mockService.getDevices(),
-      mockService.getSessions(),
+      deviceService.getDevices(),
+      sessionService.getSessions(),
       mockService.getIncidents(),
     ]);
     setSchool(s);
@@ -80,14 +82,14 @@ export function SchoolProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleCreateSession = async (dto: CreateSessionDTO): Promise<LessonSession> => {
-    const created = await mockService.createSession(dto);
+    const created = await sessionService.createSession(dto);
     await reloadState();
     addNotification('success', `Sessão aberta com sucesso para a turma selecionada.`);
     return created;
   };
 
   const handleEndSession = async (id: string, justification: string): Promise<LessonSession> => {
-    const ended = await mockService.endSession(id, justification);
+    const ended = await sessionService.endSession(id, justification);
     await reloadState();
     addNotification('info', `Sessão encerrada com sucesso e equipamentos liberados.`);
     return ended;

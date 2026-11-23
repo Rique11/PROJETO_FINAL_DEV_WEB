@@ -1,25 +1,27 @@
+// src/app/layout.tsx
+
 import type { Metadata } from 'next';
 import './globals.css';
-import { SchoolProvider } from '@/context/SchoolContext';
-import { AppShell } from '@/components/AppShell';
+import { AuthProvider } from '@/context/AuthContext';
 
 export const metadata: Metadata = {
   title: 'Proteca — Foco e Segurança Pedagógica',
-  description:
-    'Proteca apoia professores no uso pedagógico e seguro de dispositivos escolares, com orientação formativa.',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  return (
+}) { 
+  return ( 
     <html lang="pt-BR">
+      <head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Proteca — Foco e Segurança Pedagógica</title>
+      </head>
       <body>
-        <SchoolProvider>
-          <AppShell>{children}</AppShell>
-        </SchoolProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
