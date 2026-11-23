@@ -55,7 +55,7 @@ export default function NovaSessaoPage() {
         deviceIds: selectedDeviceIds,
       });
 
-      router.push(`/sessoes/${created.id}`);
+      router.push(`/sessoes/detalhe?id=${encodeURIComponent(created.id)}`);
     } catch {
       setErrors({ objective: 'Ocorreu um erro ao abrir a sessão. Tente novamente.' });
       setIsSubmitting(false);

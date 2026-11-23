@@ -81,7 +81,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
 
       <div className="mt-4 pt-3 border-t border-slate-100">
         <Link
-          href={`/sessoes/${session.id}`}
+          href={`/sessoes/detalhe?id=${encodeURIComponent(session.id)}`}
           className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-semibold text-brand-action bg-brand-action-light hover:bg-teal-100 transition-colors"
         >
           <span>Abrir Detalhes da Sessão</span>
