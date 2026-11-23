@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useMemo, useState } from 'react';
+import React, {useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { authService } from '@/services/authService';
@@ -9,10 +9,8 @@ export default function LoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
-    const [erro, setErro] = useState('');
     const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    setErro('');
 
     try {
         const response = await authService.login(email, senha);
@@ -25,7 +23,6 @@ export default function LoginPage() {
             ? error.message
             : 'Erro ao realizar login.';
 
-        setErro(message);
     }
     };
 
