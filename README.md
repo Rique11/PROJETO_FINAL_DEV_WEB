@@ -1,4 +1,4 @@
-# Proteca
+# Proteca 
 
 Sistema web para professores e gestores organizarem o uso dos Chromebooks e tablets fornecidos pelo governo, registrarem ocorrências e receberem orientação pedagógica assistida por IA.
 
