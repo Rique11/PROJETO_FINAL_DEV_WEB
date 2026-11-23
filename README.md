@@ -7,7 +7,7 @@ Trabalho final de **Desenvolvimento de Aplicações Web** (Engenharia de Computa
 - **Dupla:** Pedro Lucas dos Reis Silva (RA 2272040) e Henrique Cois Farjado Gau (RA 2369133)
 - **Tema:** 12 — Problemas de segurança, controle e uso pedagógico dos dispositivos fornecidos pelo governo
 - **Repositório:** https://github.com/plreis/proteca
-- **API pública:** publicação no Coolify em andamento (ver `docs/deploy-coolify.md`)
+- **API pública:** publicação no Coolify em andamento
 - **Versão estática da Sprint 1:** https://plreis.github.io/proteca/
 
 ## Descrição do sistema

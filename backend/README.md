@@ -49,4 +49,4 @@ Sem chave, ou se o Gemini falhar, a resposta vem do fallback local com `model: "
 
 ## Deploy
 
-Ver `../docs/deploy-coolify.md`.
+Imagem Docker em `backend/Dockerfile` (porta `8000`, healthcheck em `/api/v1/health`). As variáveis obrigatórias em produção estão em `.env.example`.

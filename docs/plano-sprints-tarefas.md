@@ -34,7 +34,7 @@ A review de 11/11 aconteceu sem a API publicada. Em 18/11 a auditoria encontrou 
 - Modelo `gemini-1.5-flash` desativado pelo Google; a IA nunca seria chamada de verdade.
 - Schemas com nomes diferentes dos tipos do frontend e quatro formatos de resposta de IA.
 
-Falta (#4): publicar a API no Coolify seguindo `docs/deploy-coolify.md` e conferir `/docs` e o Live com a chave real.
+Falta (#4): publicar a API no Coolify e conferir `/docs` e o Live com a chave real.
 
 ## Sprint 3 — até 23/11
 

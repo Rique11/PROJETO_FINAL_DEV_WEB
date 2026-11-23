@@ -32,8 +32,9 @@ export const AIDemoCard: React.FC<AIDemoCardProps> = ({ sessionId }) => {
     setError(null);
     try {
       setGuidance(await requestLiveGuidance(sessionId));
-    } catch {
-      setError('Não foi possível gerar a orientação agora. Tente novamente.');
+    } catch (err) {
+      const detail = err instanceof Error ? ` (${err.message})` : '';
+      setError(`Não foi possível gerar a orientação agora${detail}. Tente novamente.`);
     } finally {
       setIsLoading(false);
     }

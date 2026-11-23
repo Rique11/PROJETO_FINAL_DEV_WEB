@@ -26,4 +26,17 @@ Thumbs.db
 # Chaves e certificados
 *.pem
 *.key
+ssh-key-*
+*.pub
 tmp
+
+# Configurações locais de ferramentas e guias de uso pessoal (não fazem parte da entrega)
+AGENTS.md
+CLAUDE.md
+.claude/
+.cursor/
+.codex/
+.gemini/
+.github/copilot-instructions.md
+docs/agents/
+docs/deploy-coolify.md

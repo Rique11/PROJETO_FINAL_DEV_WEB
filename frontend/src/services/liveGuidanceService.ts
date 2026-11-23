@@ -1,18 +1,6 @@
 import { apiRequest } from './api';
 import { LiveGuidance } from '@/types';
 
-interface LiveGuidanceRequest {
-  sessionId: string;
-  objective: string;
-  focus: {
-    activeDevices: number;
-    focusLostEvents: number;
-    safetyAlerts: number;
-    openIncidents: number;
-    elapsedMinutes: number;
-  };
-}
-
 interface LiveGuidanceResponse {
   session_id: string;
   model: string;
@@ -25,23 +13,19 @@ interface LiveGuidanceResponse {
   is_mock: boolean;
 }
 
-export async function requestLiveGuidance(
-  request: LiveGuidanceRequest
-): Promise<LiveGuidance> {
-  const data = await apiRequest<LiveGuidanceResponse>('/ia/live', {
-    method: 'POST',
-    body: {
-      session_id: request.sessionId,
-      objective: request.objective,
-      focus: {
-        active_devices: request.focus.activeDevices,
-        focus_lost_events: request.focus.focusLostEvents,
-        safety_alerts: request.focus.safetyAlerts,
-        open_incidents: request.focus.openIncidents,
-        elapsed_minutes: request.focus.elapsedMinutes,
-      },
-    },
-  });
+/**
+ * Proteca Live da sessão. A API conta os sinais agregados da própria sessão
+ * (ocorrências abertas e telemetria) e, se o Gemini falhar, devolve o fallback
+ * local com is_mock=true. Erros de rede ou de autenticação sobem para a tela.
+ */
+export async function requestLiveGuidance(sessionId: string): Promise<LiveGuidance> {
+  const data = await apiRequest<LiveGuidanceResponse>(
+    `/sessions/${encodeURIComponent(sessionId)}/live`,
+    {
+      method: 'POST',
+      token: localStorage.getItem('proteca_token') ?? undefined,
+    }
+  );
 
   return {
     sessionId: data.session_id,
