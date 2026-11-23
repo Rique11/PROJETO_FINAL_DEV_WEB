@@ -9,6 +9,6 @@ USERS: dict[str, UserInMemory] = {
         username="professor@proteca.local",
         full_name="Professor Demonstração",
         role=UserRole.PROFESSOR,
-        hashed_password=settings.SENHA_HASH_GERADO,
+        hashed_password=settings.SENHA_TESTE_HASH,
     ),
 }
