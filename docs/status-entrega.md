@@ -15,7 +15,7 @@ Atualizado em 18/11/2026.
 
 | Critério do professor | Situação | Onde verificar |
 |---|---|---|
-| API acessível por URL pública com `/docs` | Pendente: deploy no Coolify | `docs/deploy-coolify.md` |
+| API acessível por URL pública com `/docs` | Pendente: deploy no Coolify | `backend/Dockerfile` |
 | Código organizado em módulos | Feito | `backend/app/{routers,schemas,repositories,services,core}` |
 | Schemas Pydantic alinhados ao frontend | Feito | `backend/app/schemas/` e `frontend/src/types/index.ts` |
 | Códigos HTTP e mensagens de erro adequados | Feito (404, 409, 422) | `backend/app/core/errors.py`, testes |
