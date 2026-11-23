@@ -17,18 +17,28 @@ export const authService = {
     form.set('username', username);
     form.set('password', password);
 
-    const response = await fetch(`${API_URL}/auth/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: form,
-    });
+    if (!API_URL) {
+      throw new Error('NEXT_PUBLIC_API_URL não está configurada.');
+    }
 
-    const data = await response.json();
+    let response: Response;
+    try {
+      response = await fetch(`${API_URL}/auth/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: form,
+      });
+    } catch {
+      throw new Error('Não foi possível conectar à API. Tente novamente em instantes.');
+    }
 
-    if (!response.ok) {
-      throw new Error(data.detail ?? 'Não foi possível realizar o login.');
+    // Um proxy fora do ar pode responder HTML; nesse caso não há "detail".
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok || !data) {
+      throw new Error(data?.detail ?? 'Não foi possível realizar o login.');
     }
 
     return data;
