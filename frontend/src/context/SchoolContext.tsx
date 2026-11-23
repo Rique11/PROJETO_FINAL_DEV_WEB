@@ -13,7 +13,7 @@ import {
   LessonSession,
 } from '@/types';
 import { mockService } from '@/services/mockService';
-import {deviceService, CreateDeviceDTO} from '@/services/dispositivoService';
+import {deviceService} from '@/services/dispositivoService';
 import { sessionService } from '@/services/sessionService';
 import { requestLiveGuidance as requestLiveGuidanceFromApi } from '@/services/liveGuidanceService';
 
