@@ -22,7 +22,7 @@ export default function LoginPage() {
         error instanceof Error
             ? error.message
             : 'Erro ao realizar login.';
-
+        alert(message);
     }
     };
 
