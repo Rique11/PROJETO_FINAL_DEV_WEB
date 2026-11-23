@@ -1,5 +1,6 @@
-# backend/app/auth/security.py
+# backend/app/auth/middleware.py
 
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
@@ -8,11 +9,13 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
+from pwdlib.exceptions import PwdlibError
 
-from app.auth.users import USERS
+from app.auth.users import get_user
 from app.core.config import settings
 from app.schemas.auth import UserInMemory, UserPublic
 
+logger = logging.getLogger(__name__)
 
 password_hash = PasswordHash.recommended()
 
@@ -25,12 +28,18 @@ def authenticate_user(
     username: str,
     password: str,
 ) -> UserInMemory | None:
-    user = USERS.get(username.lower())
+    user = get_user(username)
 
     if user is None:
         return None
 
-    if not password_hash.verify(password, user.hashed_password):
+    try:
+        password_ok = password_hash.verify(password, user.hashed_password)
+    except PwdlibError:
+        logger.warning("Hash de senha ilegível para %s; confira SENHA_TESTE_HASH.", user.username)
+        return None
+
+    if not password_ok:
         return None
 
     if user.disabled:
@@ -82,7 +91,7 @@ def get_current_user(
     except InvalidTokenError:
         raise credentials_error
 
-    user = USERS.get(username)
+    user = get_user(username)
 
     if user is None or user.disabled:
         raise credentials_error

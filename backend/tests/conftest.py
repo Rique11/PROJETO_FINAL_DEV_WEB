@@ -1,11 +1,22 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from app.auth.middleware import get_current_user
 from app.core.config import settings
 from app.core.dependencies import build_repository, get_memory_repository
 from app.main import app
+from app.schemas.auth import UserPublic, UserRole
 
 OBJECTIVE = "Compreender como proteger dados pessoais na escola."
+
+# Os testes de regra de negócio rodam como um professor já autenticado.
+# O login é coberto em test_auth.py.
+TEST_PROFESSOR = UserPublic(
+    id="usr-teste",
+    username="professor.teste@proteca.local",
+    full_name="Professor de Teste",
+    role=UserRole.PROFESSOR,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -21,6 +32,7 @@ def repository():
 @pytest.fixture
 def client(repository):
     app.dependency_overrides[get_memory_repository] = lambda: repository
+    app.dependency_overrides[get_current_user] = lambda: TEST_PROFESSOR
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
